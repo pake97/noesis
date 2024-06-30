@@ -196,5 +196,5 @@ def upload():
         if(loaded):
             st.warning("Saved " + loaded + " successfully!", icon="✅")
             st.session_state["upload_state"] = "Saved " + loaded + " successfully!"
-st.button("Upload file to Sandbox", on_click=upload)
+st.button("Upload file", on_click=upload)
 
