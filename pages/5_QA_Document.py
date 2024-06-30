@@ -18,7 +18,6 @@ my_bucket = s3.Bucket('salesian2024')
 s3_client = boto3.client('s3', aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])
 s3_docs = [doc.key for doc in my_bucket.objects.all()]
 os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
-st.set_page_config(page_title="Noesis")
 
 def check_password():
     """Returns `True` if the user had the correct password."""
