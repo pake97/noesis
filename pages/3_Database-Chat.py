@@ -53,7 +53,7 @@ def init():
     max_retries=2)
     # Database
     #db = SQLDatabase.from_uri(f"sqlite:///./{db_name}.db", sample_rows_in_table_info=0)
-    db = SQLDatabase.from_uri(f"mysql://root:Salesiani2024@127.0.0.1:3306/Salesiani", sample_rows_in_table_info=0)
+    db = SQLDatabase.from_uri(f""+st.secrets["mysql"], sample_rows_in_table_info=0)
     return model,db
 
 def text2sql(question):
@@ -78,7 +78,7 @@ def execute_sql(query):
     print('EXECUTE SQL')
     print(query)
     print('----------------')
-    db = SQLDatabase.from_uri(f"mysql://root:Salesiani2024@127.0.0.1:3306/Salesiani", sample_rows_in_table_info=0)
+    db = SQLDatabase.from_uri(f""+st.secrets["mysql"], sample_rows_in_table_info=0)
     update_action_list = ['UPDATE','ADD','DELETE','DROP','MODIFY','INSERT']
     try:
         if any(item in query for item in update_action_list)==False:# no update actions

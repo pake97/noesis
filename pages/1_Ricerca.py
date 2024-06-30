@@ -7,9 +7,8 @@ import os
 import boto3
 from pymilvus import MilvusClient
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-CLUSTER_ENDPOINT="https://in03-fbca0cedac2e113.api.gcp-us-west1.zillizcloud.com" # Set your cluster endpoint
-TOKEN="b23e248d8a82ba9c8718cca8e0d27c67b9de17122a90c05e52090e540abad8b5bf084766511cf9ba9ba33a09f2b055014a776b9d" # Set your token
-os.environ["GOOGLE_API_KEY"] = "AIzaSyDzDsl5G4lD2c07IzcAbpb61Pp11QZIobg"
+
+os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 class Embedder:
     def __init__(self):
         self.embeddings =GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -24,8 +23,8 @@ class Embedder:
 class Connector:
     def __init__(self):
         self.client = MilvusClient(
-            uri=CLUSTER_ENDPOINT,
-            token=TOKEN
+            uri=st.secrets["ZILLIZ_CLUSTER_ENDPOINT"],
+            token=st.secrets["ZILLIZ_TOKEN"]
         )
 
     def get_client(self):
@@ -38,6 +37,8 @@ class Connector:
             "index_file_size": 1024,
             "metric_type": "L2"
         })
+        
+        
     
     def insert_data(self, collection_name, data):
         return self.client.insert(collection_name=collection_name, data=data)
@@ -46,7 +47,7 @@ class Connector:
         return self.client.search(collection_name=collection_name, data=vector, limit=top_k, search_params={"metric_type": "COSINE"}, output_fields=['url'])
 def download_file(url):
     st.session_state["clicked"] = True
-    s3_client = boto3.client('s3', aws_access_key_id="AKIA6ODU5YGVV7PSITMV", aws_secret_access_key="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")
+    s3_client = boto3.client('s3', aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])
     downloaded = s3_client.download_file('salesian2024', url[0], '/tmp/temp_file.pdf')
     
 def check_password():

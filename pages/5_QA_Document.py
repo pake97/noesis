@@ -9,10 +9,10 @@ import os, tempfile
 from io import BytesIO
 from streamlit_searchbox import st_searchbox
 import boto3
-session = boto3.Session( aws_access_key_id='AKIA6ODU5YGVV7PSITMV', aws_secret_access_key='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')
+session = boto3.Session( aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])
 s3 = session.resource('s3')
 my_bucket = s3.Bucket('salesian2024')
-s3_client = boto3.client('s3', aws_access_key_id="AKIA6ODU5YGVV7PSITMV", aws_secret_access_key="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")
+s3_client = boto3.client('s3', aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])
 s3_docs = [doc.key for doc in my_bucket.objects.all()]
 
 st.set_page_config(page_title="Noesis")
