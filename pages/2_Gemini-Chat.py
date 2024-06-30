@@ -49,17 +49,18 @@ chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
 messages = [
     
 ]
-st.session_state.messages=[]
+if "messagesgemini" not in st.session_state:
+    st.session_state.messagesgemini = []
+if "aimessagesgemini" not in st.session_state:
+    st.session_state.aimessagesgemini = []
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
+# Display chat messages from history on app rerun
+for message in st.session_state.messagesgemini:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 if prompt := st.chat_input("Messaggio"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messagesgemini.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
 
         if(len(prompt)>2500):
@@ -68,19 +69,19 @@ if prompt := st.chat_input("Messaggio"):
             for i in range(0, len(prompt), 2500):
                 chunks.append(prompt[i:i + 2500])
             for chunk in chunks:   
-                messages.append(HumanMessage(content=chunk))
+                st.session_state.aimessagesgemini.append(HumanMessage(content=chunk))
         else : 
-            messages.append(HumanMessage(content=prompt))
+            st.session_state.aimessagesgemini.append(HumanMessage(content=prompt))
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
         
-        stream =chat_model.stream(messages)
+        stream =chat_model.stream(st.session_state.aimessagesgemini)
         logging.info(stream)
         response = st.write_stream(stream)
         
-        messages.append(AIMessage(content=stream))
-    st.session_state.messages.append({"role": "assistant", "content": response})
+        st.session_state.aimessagesgemini.append(AIMessage(content=response))
+    st.session_state.messagesgemini.append({"role": "assistant", "content": response})
 
 
 

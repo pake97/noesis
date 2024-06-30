@@ -134,17 +134,20 @@ chat_model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
 messages = [
     
 ]
-st.session_state.messages=[]
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
 
-for message in st.session_state.messages:
+if "messagessalesiani" not in st.session_state:
+    st.session_state.messagessalesiani = []
+if "aimessagessalesiani" not in st.session_state:
+    st.session_state.aimessagessalesiani = []
+
+for message in st.session_state.messagessalesiani:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
+        
 connector = Connector()
 if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messagessalesiani.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         with st.spinner('Calcolando...'):
             embs = Embedder()
@@ -161,16 +164,16 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
                 # Load the PDF document from the URL
                 #loader.load_from_url('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
                 # Extract text from the loaded PDF
-            messages.append(SystemMessage(content=context))
-            messages.append(HumanMessage(content=prompt))
+            st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
+            st.session_state.aimessagessalesiani.append(HumanMessage(content=prompt))
         
 
     with st.chat_message("assistant"):
         
-        stream =chat_model.stream(messages)
+        stream =chat_model.stream(st.session_state.aimessagessalesiani)
         response = st.write_stream(stream)
-        messages.append(AIMessage(content=stream))
-    st.session_state.messages.append({"role": "assistant", "content": response})
+        st.session_state.aimessagessalesiani.append(AIMessage(content=response))
+    st.session_state.messagessalesiani.append({"role": "assistant", "content": response})
 
 
 

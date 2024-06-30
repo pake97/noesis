@@ -121,7 +121,7 @@ def sqlresult2text(question,sql_query,sql_result):
     # execute the model 
     return   text_response, {"question": question,"query":sql_query,"response":sql_result}
 st.logo('logo.png', icon_image='logo.png')
-st.session_state.messages=[]
+
 os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 def check_password():
@@ -163,20 +163,22 @@ messages = [
 ]
 
 
-if "messages" not in st.session_state:
-    st.session_state.messages = []
+if "messagesdb" not in st.session_state:
+    st.session_state.messagesdb = []
+if "aimessagesdb" not in st.session_state:
+    st.session_state.aimessagesdb = []
 
-for message in st.session_state.messages:
+for message in st.session_state.messagesdb:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
 if prompt := st.chat_input("Chiedi al Database:"):
-    st.session_state.messages.append({"role": "user", "content": prompt})
+    st.session_state.messagesdb.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-        question = st.session_state.messages[-1]["content"]
+        question = st.session_state.messagesdb[-1]["content"]
         sql=text2sql(question)     
         st.write(sql)   
         result = execute_sql(sql)
@@ -222,8 +224,8 @@ if prompt := st.chat_input("Chiedi al Database:"):
         else:
             pass
         
-        messages.append(AIMessage(content=stream))
-    st.session_state.messages.append({"role": "assistant", "content": response})
+        st.session_state.aimessagesdb.append(AIMessage(content=response))
+    st.session_state.messagesdb.append({"role": "assistant", "content": response})
 
 
 
