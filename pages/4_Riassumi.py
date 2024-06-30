@@ -60,7 +60,7 @@ if st.button("Summarize"):
         loader = PyPDFLoader(tmp_file.name)
         pages = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
-        texts = text_splitter.create_documents(pages)
+        texts = text_splitter.split_documents(pages)
         
         
         os.remove(tmp_file.name)
