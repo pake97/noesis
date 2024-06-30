@@ -44,12 +44,7 @@ st.logo('logo.png', icon_image='logo.png')
 st.set_page_config(page_title="Noesis")
 st.title("Gemini AI Chatbot")
 
-""" chat_model =ChatOpenAI(
-    #model="gpt-4o",
-    model ="gpt-3.5-turbo-0125",
-    temperature=0,
-    max_tokens=None,
-    timeout=None) """
+
 chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
 messages = [
     
@@ -80,7 +75,7 @@ if prompt := st.chat_input("Messaggio"):
 
     with st.chat_message("assistant"):
         
-        stream =chat_model.stream(messages, stream=True)
+        stream =chat_model.stream(messages)
         logging.info(stream)
         response = st.write_stream(stream)
         
