@@ -1,4 +1,5 @@
 import os, tempfile
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -59,12 +60,12 @@ if st.button("Summarize"):
             os.remove(tmp_file.name)
 
             # Create embeddings for the pages and insert into Chroma database
-            embeddings=OpenAIEmbeddings(openai_api_key=st.secrets["OPENAI_API_KEY"])
+            embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
             vectordb = Chroma.from_documents(pages, embeddings)
 
             # Initialize the OpenAI module, load and run the summarize chain
             
-            llm = ChatGoogleGenerativeAI(model="gemini-pro")
+            llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
             chain = load_summarize_chain(llm, chain_type="stuff")
             search = vectordb.similarity_search(" ")
             summary = chain.run(input_documents=search, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))

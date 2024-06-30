@@ -43,7 +43,7 @@ LINE_DATA = """
 """
 
 def init():
-    model = ChatGoogleGenerativeAI(model='gemini-pro')
+    model = ChatGoogleGenerativeAI(model='gemini-1.5-pro-latest')
     #model = ChatVertexAI(model='chat-bison@002')
     """ model=ChatOpenAI(
     model="gpt-3.5-turbo-0125",

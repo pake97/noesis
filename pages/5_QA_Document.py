@@ -74,7 +74,7 @@ def generate_response(uploaded_file, query_text, uploaded):
         
         # Create QA chain
         
-        llm =  ChatGoogleGenerativeAI(model="gemini-pro")
+        llm =  ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
         qa = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
         return qa.run(query_text)
 

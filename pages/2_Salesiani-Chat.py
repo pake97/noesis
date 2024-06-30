@@ -90,7 +90,7 @@ review_prompt_template = ChatPromptTemplate(
 )
 
 
-chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
+chat_model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
 review_chain = review_prompt_template | chat_model
 
 
@@ -130,7 +130,7 @@ st.set_page_config(page_title="Noesis")
 st.title("Gemini Ai Chatbot con i documenti Salesiani")
 
 
-chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
+chat_model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
 messages = [
     
 ]
