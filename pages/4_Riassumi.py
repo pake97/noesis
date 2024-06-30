@@ -6,7 +6,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains.summarize import load_summarize_chain
-from langchain.document_loaders import PyPDFLoader
+from langchain_community.document_loaders import PyPDFLoader
 st.logo('logo.png', icon_image='logo.png')
 st.set_page_config(page_title="Noesis")
 # Streamlit app
@@ -60,7 +60,8 @@ if st.button("Summarize"):
         text=""
         
         for p in pages:
-            text+=p
+            text+=p.page_content
+        
         os.remove(tmp_file.name)
 
         # Create embeddings for the pages and insert into Chroma database
