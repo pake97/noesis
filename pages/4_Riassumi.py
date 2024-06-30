@@ -3,10 +3,12 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-
+import hmac
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 st.logo('logo.png', icon_image='logo.png')
 st.set_page_config(page_title="Noesis")
 # Streamlit app
@@ -56,11 +58,10 @@ if st.button("Summarize"):
         with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
             tmp_file.write(source_doc.read())
         loader = PyPDFLoader(tmp_file.name)
-        pages = loader.load_and_split()
-        text=""
+        pages = loader.load()
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+        texts = text_splitter.create_documents(pages)
         
-        for p in pages:
-            text+=p.page_content
         
         os.remove(tmp_file.name)
 
@@ -73,6 +74,6 @@ if st.button("Summarize"):
         llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
         chain = load_summarize_chain(llm, chain_type="stuff")
         
-        summary = chain.run(input_documents=text, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))
+        summary = chain.run(input_documents=texts, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))
         summary = llm.stream("Traduci in italiano: {summary}".format(summary=summary))
         st.write_stream(summary) 
