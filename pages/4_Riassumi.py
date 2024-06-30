@@ -58,8 +58,10 @@ if st.button("Summarize"):
         loader = PyPDFLoader(tmp_file.name)
         pages = loader.load_and_split()
         text=""
+        
         for p in pages:
-            text+=p
+            text+=p.page_content
+        
         os.remove(tmp_file.name)
 
         # Create embeddings for the pages and insert into Chroma database
