@@ -125,10 +125,12 @@ def check_password():
 if not check_password():
     st.stop()  # Do not continue if check_password is 
 st.logo('logo.png', icon_image='logo.png')
-
+def resetChat():
+    st.session_state.messagessalesiani = []
+    st.session_state.aimessagessalesiani = []
 st.set_page_config(page_title="Noesis")
 st.title("Gemini Ai Chatbot con i documenti Salesiani")
-
+st.button("Reset", on_click=resetChat)
 
 chat_model = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
 messages = [
@@ -144,29 +146,31 @@ if "aimessagessalesiani" not in st.session_state:
 for message in st.session_state.messagessalesiani:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-        
+
 connector = Connector()
 if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
     st.session_state.messagessalesiani.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         with st.spinner('Calcolando...'):
-            embs = Embedder()
+            if(len(st.session_state.aimessagessalesiani==0)):
+                embs = Embedder()
 
-            embedding = embs.get_embeddings(prompt)
+                embedding = embs.get_embeddings(prompt)
 
-            context=""
-            res =connector.search("documents", embedding, top_k=2)
-            for re in res[0]:
-                loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
-                pages = loader.load_and_split()
-                text = "\n\n".join(str(p.page_content) for p in pages)
-                context+=text
-                # Load the PDF document from the URL
-                #loader.load_from_url('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
-                # Extract text from the loaded PDF
-            st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
+                context=""
+                res =connector.search("documents", embedding, top_k=2)
+                for re in res[0]:
+                    loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
+                    pages = loader.load_and_split()
+                    text = "\n\n".join(str(p.page_content) for p in pages)
+                    context+=text
+                    # Load the PDF document from the URL
+                    #loader.load_from_url('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
+                    # Extract text from the loaded PDF
+                
+                st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
             st.session_state.aimessagessalesiani.append(HumanMessage(content=prompt))
-        
+
 
     with st.chat_message("assistant"):
         
