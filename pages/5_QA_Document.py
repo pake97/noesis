@@ -4,7 +4,9 @@ from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.document_loaders import PyPDFLoader
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import os, tempfile
 from io import BytesIO
 from streamlit_searchbox import st_searchbox
@@ -14,7 +16,7 @@ s3 = session.resource('s3')
 my_bucket = s3.Bucket('salesian2024')
 s3_client = boto3.client('s3', aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])
 s3_docs = [doc.key for doc in my_bucket.objects.all()]
-
+os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 st.set_page_config(page_title="Noesis")
 
 def check_password():
@@ -62,13 +64,18 @@ def generate_response(uploaded_file, query_text, uploaded):
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         texts = text_splitter.create_documents([p.page_content for p in pages])
         # Select embeddings
-        embeddings = OpenAIEmbeddings(openai_api_key=st.secrets["OPENAI_API_KEY"])
+        
+        #embeddings = OpenAIEmbeddings(openai_api_key=st.secrets["OPENAI_API_KEY"])
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         # Create a vectorstore from documents
         db = Chroma.from_documents(texts, embeddings)
         # Create retriever interface
         retriever = db.as_retriever()
+        
         # Create QA chain
-        qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key=st.secrets["OPENAI_API_KEY"]), chain_type='stuff', retriever=retriever)
+        #llm =  OpenAI(openai_api_key=st.secrets["OPENAI_API_KEY"])
+        llm =  ChatGoogleGenerativeAI(model="gemini-pro")
+        qa = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
         return qa.run(query_text)
 
 

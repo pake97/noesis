@@ -2,11 +2,11 @@ import streamlit as st
 import hmac
 import pandas as pd
 import os
-from langchain_openai import ChatOpenAI
 from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 import tiktoken
 import logging
 import re
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.utilities import SQLDatabase
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -43,14 +43,14 @@ LINE_DATA = """
 """
 
 def init():
-    #model = ChatGoogleGenerativeAI(model='gemini-pro')
+    model = ChatGoogleGenerativeAI(model='gemini-pro')
     #model = ChatVertexAI(model='chat-bison@002')
-    model=ChatOpenAI(
+    """ model=ChatOpenAI(
     model="gpt-3.5-turbo-0125",
     temperature=0,
     max_tokens=None,
     timeout=None,
-    max_retries=2)
+    max_retries=2) """
     # Database
     #db = SQLDatabase.from_uri(f"sqlite:///./{db_name}.db", sample_rows_in_table_info=0)
     db = SQLDatabase.from_uri(f""+st.secrets["mysql"], sample_rows_in_table_info=0)
@@ -121,7 +121,7 @@ def sqlresult2text(question,sql_query,sql_result):
     return   text_response, {"question": question,"query":sql_query,"response":sql_result}
 st.logo('logo.png', icon_image='logo.png')
 st.session_state.messages=[]
-
+os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 def check_password():
     """Returns `True` if the user had the correct password."""

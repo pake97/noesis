@@ -2,6 +2,7 @@ import streamlit as st
 import hmac
 import os
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 from langchain.document_loaders import PyPDFLoader
 import boto3
@@ -88,8 +89,8 @@ review_prompt_template = ChatPromptTemplate(
     messages=messages,
 )
 
-chat_model = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
-
+#chat_model = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
+chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
 review_chain = review_prompt_template | chat_model
 
 
@@ -128,13 +129,13 @@ st.logo('logo.png', icon_image='logo.png')
 st.set_page_config(page_title="Noesis")
 st.title("Gemini Ai Chatbot con i documenti Salesiani")
 
-chat_model =ChatOpenAI(
+""" chat_model =ChatOpenAI(
     #model="gpt-4o",
     model ="gpt-3.5-turbo-0125",
     temperature=0,
     max_tokens=None,
-    timeout=None)
-
+    timeout=None) """
+chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
 messages = [
     
 ]

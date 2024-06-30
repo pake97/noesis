@@ -2,6 +2,7 @@ import streamlit as st
 import hmac
 import os
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 import tiktoken
 import logging
@@ -11,6 +12,7 @@ import logging
 
 
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 def check_password():
     """Returns `True` if the user had the correct password."""
 
@@ -42,13 +44,13 @@ st.logo('logo.png', icon_image='logo.png')
 st.set_page_config(page_title="Noesis")
 st.title("Gemini AI Chatbot")
 
-chat_model =ChatOpenAI(
+""" chat_model =ChatOpenAI(
     #model="gpt-4o",
     model ="gpt-3.5-turbo-0125",
     temperature=0,
     max_tokens=None,
-    timeout=None)
-
+    timeout=None) """
+chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
 messages = [
     
 ]

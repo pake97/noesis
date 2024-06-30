@@ -1,6 +1,7 @@
 import os, tempfile
 import streamlit as st
 from langchain_openai import ChatOpenAI
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.vectorstores.chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains.summarize import load_summarize_chain
@@ -10,7 +11,7 @@ st.set_page_config(page_title="Noesis")
 # Streamlit app
 st.header('Riassumi un documento PDF')
 os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
-
+os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 
 def check_password():
     """Returns `True` if the user had the correct password."""
@@ -62,7 +63,8 @@ if st.button("Summarize"):
             vectordb = Chroma.from_documents(pages, embeddings)
 
             # Initialize the OpenAI module, load and run the summarize chain
-            llm=ChatOpenAI(temperature=0, openai_api_key=st.secrets["OPENAI_API_KEY"])
+            #llm=ChatOpenAI(temperature=0, openai_api_key=st.secrets["OPENAI_API_KEY"])
+            llm = ChatGoogleGenerativeAI(model="gemini-pro")
             chain = load_summarize_chain(llm, chain_type="stuff")
             search = vectordb.similarity_search(" ")
             summary = chain.run(input_documents=search, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))

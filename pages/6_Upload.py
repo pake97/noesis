@@ -1,4 +1,5 @@
 import streamlit as st
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import os.path
 import pandas as pd
 import pathlib
@@ -73,7 +74,7 @@ class Connector:
         return self.client.search(collection_name=collection_name, data=vector, limit=top_k, search_params={"metric_type": "COSINE"})
     
     
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
 os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 class Embedder:
     def __init__(self):
