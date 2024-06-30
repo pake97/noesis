@@ -3,7 +3,7 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.vectorstores.chroma import Chroma
+
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains.summarize import load_summarize_chain
 from langchain.document_loaders import PyPDFLoader
@@ -49,27 +49,28 @@ number = st.number_input("Numero di parole", min_value=1, max_value=1000, value=
 refine = st.text_area("Rifinisci il prompt", value="")
 if st.button("Summarize"):
     # Validate inputs
-    try:
-        with st.spinner('Attendi...'):
-            
-            # Save uploaded file temporarily to disk, load and split the file into pages, delete temp file
-            with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
-                tmp_file.write(source_doc.read())
-            loader = PyPDFLoader(tmp_file.name)
-            pages = loader.load_and_split()
-            os.remove(tmp_file.name)
+    
+    with st.spinner('Attendi...'):
+        
+        # Save uploaded file temporarily to disk, load and split the file into pages, delete temp file
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_file.write(source_doc.read())
+        loader = PyPDFLoader(tmp_file.name)
+        pages = loader.load_and_split()
+        text=""
+        for p in pages:
+            text+=p.page_content
+        os.remove(tmp_file.name)
 
-            # Create embeddings for the pages and insert into Chroma database
-            embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-            vectordb = Chroma.from_documents(pages, embeddings)
+        # Create embeddings for the pages and insert into Chroma database
+        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
+        
 
-            # Initialize the OpenAI module, load and run the summarize chain
-            
-            llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
-            chain = load_summarize_chain(llm, chain_type="stuff")
-            search = vectordb.similarity_search(" ")
-            summary = chain.run(input_documents=search, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))
-            summary = llm.stream("Traduci in italiano: {summary}".format(summary=summary))
-            st.write_stream(summary) 
-    except Exception as e:
-        st.exception(f"An error occurred: {e}")
+        # Initialize the OpenAI module, load and run the summarize chain
+        
+        llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
+        chain = load_summarize_chain(llm, chain_type="stuff")
+        
+        summary = chain.run(input_documents=text, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))
+        summary = llm.stream("Traduci in italiano: {summary}".format(summary=summary))
+        st.write_stream(summary) 
