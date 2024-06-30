@@ -3,7 +3,7 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.vectorstores.chroma import Chroma
+
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains.summarize import load_summarize_chain
 from langchain.document_loaders import PyPDFLoader
@@ -61,14 +61,14 @@ if st.button("Summarize"):
 
             # Create embeddings for the pages and insert into Chroma database
             embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-            vectordb = Chroma.from_documents(pages, embeddings)
+            
 
             # Initialize the OpenAI module, load and run the summarize chain
             
             llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
             chain = load_summarize_chain(llm, chain_type="stuff")
-            search = vectordb.similarity_search(" ")
-            summary = chain.run(input_documents=search, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))
+            text = "\n\n".join(str(p.page_content) for p in pages)
+            summary = chain.run(input_documents=text, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))
             summary = llm.stream("Traduci in italiano: {summary}".format(summary=summary))
             st.write_stream(summary) 
     except Exception as e:
