@@ -45,15 +45,7 @@ LINE_DATA = """
 
 def init():
     model = ChatGoogleGenerativeAI(model='gemini-1.5-pro-latest')
-    #model = ChatVertexAI(model='chat-bison@002')
-    """ model=ChatOpenAI(
-    model="gpt-3.5-turbo-0125",
-    temperature=0,
-    max_tokens=None,
-    timeout=None,
-    max_retries=2) """
-    # Database
-    #db = SQLDatabase.from_uri(f"sqlite:///./{db_name}.db", sample_rows_in_table_info=0)
+   
     db = SQLDatabase.from_uri(f""+st.secrets["mysql"], sample_rows_in_table_info=0)
     return model,db
 
