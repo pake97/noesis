@@ -152,7 +152,7 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
     st.session_state.messagessalesiani.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         with st.spinner('Calcolando...'):
-            if(len(st.session_state.aimessagessalesiani==0)):
+            if(len(st.session_state.aimessagessalesiani)==0):
                 embs = Embedder()
 
                 embedding = embs.get_embeddings(prompt)
