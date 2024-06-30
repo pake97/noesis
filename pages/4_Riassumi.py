@@ -59,7 +59,7 @@ if st.button("Summarize"):
         pages = loader.load_and_split()
         text=""
         for p in pages:
-            text+=p.page_content
+            text+=p
         os.remove(tmp_file.name)
 
         # Create embeddings for the pages and insert into Chroma database
