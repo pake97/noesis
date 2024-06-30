@@ -8,7 +8,7 @@ import logging
 import re
 import hmac
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain.utilities import SQLDatabase
+from langchain_community.utilities.sql_database import SQLDatabase
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
