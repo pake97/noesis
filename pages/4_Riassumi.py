@@ -63,7 +63,7 @@ if st.button("Summarize"):
             vectordb = Chroma.from_documents(pages, embeddings)
 
             # Initialize the OpenAI module, load and run the summarize chain
-            #llm=ChatOpenAI(temperature=0, openai_api_key=st.secrets["OPENAI_API_KEY"])
+            
             llm = ChatGoogleGenerativeAI(model="gemini-pro")
             chain = load_summarize_chain(llm, chain_type="stuff")
             search = vectordb.similarity_search(" ")

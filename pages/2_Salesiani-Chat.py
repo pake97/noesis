@@ -89,7 +89,7 @@ review_prompt_template = ChatPromptTemplate(
     messages=messages,
 )
 
-#chat_model = ChatOpenAI(model="gpt-3.5-turbo-0125", temperature=0)
+
 chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
 review_chain = review_prompt_template | chat_model
 
@@ -129,12 +129,7 @@ st.logo('logo.png', icon_image='logo.png')
 st.set_page_config(page_title="Noesis")
 st.title("Gemini Ai Chatbot con i documenti Salesiani")
 
-""" chat_model =ChatOpenAI(
-    #model="gpt-4o",
-    model ="gpt-3.5-turbo-0125",
-    temperature=0,
-    max_tokens=None,
-    timeout=None) """
+
 chat_model = ChatGoogleGenerativeAI(model="gemini-pro")
 messages = [
     
@@ -172,9 +167,8 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
 
     with st.chat_message("assistant"):
         
-        stream =chat_model.stream(messages, stream=True)
+        stream =chat_model.stream(messages)
         response = st.write_stream(stream)
-        
         messages.append(AIMessage(content=stream))
     st.session_state.messages.append({"role": "assistant", "content": response})
 

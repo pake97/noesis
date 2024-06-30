@@ -65,7 +65,7 @@ def generate_response(uploaded_file, query_text, uploaded):
         texts = text_splitter.create_documents([p.page_content for p in pages])
         # Select embeddings
         
-        #embeddings = OpenAIEmbeddings(openai_api_key=st.secrets["OPENAI_API_KEY"])
+        
         embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         # Create a vectorstore from documents
         db = Chroma.from_documents(texts, embeddings)
@@ -73,7 +73,7 @@ def generate_response(uploaded_file, query_text, uploaded):
         retriever = db.as_retriever()
         
         # Create QA chain
-        #llm =  OpenAI(openai_api_key=st.secrets["OPENAI_API_KEY"])
+        
         llm =  ChatGoogleGenerativeAI(model="gemini-pro")
         qa = RetrievalQA.from_chain_type(llm=llm, chain_type='stuff', retriever=retriever)
         return qa.run(query_text)
