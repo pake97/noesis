@@ -57,8 +57,6 @@ if st.button("Summarize"):
             tmp_file.write(source_doc.read())
         loader = PyPDFLoader(tmp_file.name)
         pages = loader.load_and_split()
-        st.write(type(pages))
-        st.write(type(pages[0]))
         text=""
         
         for p in pages:
