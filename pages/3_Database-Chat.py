@@ -53,7 +53,234 @@ def text2sql(question):
     model,db = init()
     # Using Closure desgin pattern to pass the db to the model
     def get_schema(_):
-        return db.get_table_info()
+        #return db.get_table_info()
+        return """CREATE TABLE CapitoloIspettoriale (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Data DATE NOT NULL
+);
+
+CREATE TABLE CasaSalesiana (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Descrizione TEXT,
+    Città VARCHAR(255),
+    Provincia VARCHAR(255),
+    Regione VARCHAR(255),
+    Luogo ENUM('Triveneto', 'Moldavia', 'Romania')
+);
+
+CREATE TABLE MemroCapitoloIspettoriale (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    CapitoloIspettorialeID INT,
+    SalesianoID INT,
+    DipendenteID INT,
+    FOREIGN KEY (CapitoloIspettorialeID) REFERENCES CapitoloIspettoriale(ID),
+    FOREIGN KEY (SalesianoID) REFERENCES Salesiano(ID),
+    FOREIGN KEY (DipendenteID) REFERENCES Dipendente(ID),
+    CHECK ((SalesianoID IS NOT NULL AND DipendenteID IS NULL) OR (SalesianoID IS NULL AND DipendenteID IS NOT NULL))
+);
+
+CREATE TABLE Salesiano (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Cognome VARCHAR(255) NOT NULL,
+    DataDiNascita DATE,
+    CittaNascita VARCHAR(255),
+    RegioneNascita VARCHAR(255),
+    Ruolo ENUM('Direttore', 'Insegnante', 'Amministrativo', 'Ausiliario', 'Economo', 'Delegato', 'Tirocinante', 'Diacono', 'Sacerdote', 'Cooperatore', 'Laico', 'Volontario', 'Altro'),
+    CasaSalesianaID INT,
+    DataInizioMandato DATE,
+    DataFineMandato DATE,
+    Laureato BOOLEAN,
+    Abilitato BOOLEAN,
+    DataProfessione DATE,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+);
+CREATE TABLE OperaSalesiana (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Descrizione TEXT,
+    Città VARCHAR(255),
+    Provincia VARCHAR(255),
+    Regione VARCHAR(255),
+    Luogo ENUM('Triveneto', 'Moldavia', 'Romania'),
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+);
+
+
+CREATE TABLE ScuolaSalesiana (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Indirizzo VARCHAR(255),
+    Città VARCHAR(255),
+    Provincia VARCHAR(255),
+    Regione VARCHAR(255),
+    Tipo ENUM('Primaria', 'Secondaria Primo Grado', 'Secondaria Secondo Grado', 'Università'),
+    Luogo ENUM('Triveneto', 'Moldavia', 'Romania'),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID)
+);
+
+CREATE TABLE AttivitaSalesiana (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Descrizione TEXT,
+    Città VARCHAR(255),
+    Provincia VARCHAR(255),
+    Regione VARCHAR(255),
+    Luogo ENUM('Triveneto', 'Moldavia', 'Romania'),
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+);
+
+
+
+CREATE TABLE Oratorio (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Descrizione TEXT,
+    Città VARCHAR(255),
+    Provincia VARCHAR(255),
+    Regione VARCHAR(255),
+    Luogo ENUM('Triveneto', 'Moldavia', 'Romania'),
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+);
+
+
+CREATE TABLE Parrocchia (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Indirizzo VARCHAR(255),
+    Città VARCHAR(255),
+    Provincia VARCHAR(255),
+    Regione ENUM('Triveneto', 'Moldavia', 'Romania'),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID)
+);
+
+CREATE TABLE Auto (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Modello VARCHAR(255),
+    AnnoAcquisto INT,
+    AnnoCreazione INT,
+    Targa VARCHAR(50),
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
+    ParrocchiaID INT,
+    FOREIGN KEY (ParrocchiaID) REFERENCES Parrocchia(ID),
+    AttivitaSalesianaID INT,
+    FOREIGN KEY (AttivitaSalesianaID) REFERENCES AttivitaSalesiana(ID),
+    OratorioID INT,
+    FOREIGN KEY (OratorioID) REFERENCES Oratorio(ID)
+);
+
+
+CREATE TABLE Studente (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Cognome VARCHAR(255) NOT NULL,
+    DataDiNascita DATE,
+    CodiceFiscale VARCHAR(255),
+    livello ENUM('Primaria', 'Secondaria Primo Grado', 'Secondaria Secondo Grado', 'Università'),
+    anno INT,
+    ScuolaSalesianaID INT,
+    CasaSalesianaID INT,
+    AnnoIscrizione INT,
+    Retta DECIMAL(10, 2),
+    FOREIGN KEY (ScuolaSalesianaID) REFERENCES ScuolaSalesiana(ID),
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+);
+
+CREATE TABLE Dipendente (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Cognome VARCHAR(255) NOT NULL,
+    Sesso VARCHAR(10),
+    CodiceFiscale VARCHAR(255),
+    DataDiNascita DATE,
+    CittaNascita VARCHAR(255),
+    RegioneNascita VARCHAR(255),
+    DataAssunzione DATE,
+    DataCessazione DATE,
+    Ruolo ENUM('Direttore', 'Insegnante', 'Amministrativo', 'Ausiliario', 'Economo', 'Delegato', 'Tirocinante', 'Diacono', 'Sacerdote', 'Cooperatore', 'Laico', 'Volontario', 'Altro'),
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
+    ScuolaSalesianaID INT,
+    FOREIGN KEY (ScuolaSalesianaID) REFERENCES ScuolaSalesiana(ID),
+    ParrocchiaID INT,
+    FOREIGN KEY (ParrocchiaID) REFERENCES Parrocchia(ID),
+    AttivitaSalesianaID INT,
+    FOREIGN KEY (AttivitaSalesianaID) REFERENCES AttivitaSalesiana(ID),
+    OratorioID INT,
+    FOREIGN KEY (OratorioID) REFERENCES Oratorio(ID)
+);
+
+CREATE TABLE Bilancio (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Anno INT,
+    Descrizione VARCHAR(255) NOT NULL,
+    TipoVoce ENUM('Entrata', 'Spesa', 'Attivo', 'Passivo') NOT NULL,
+    Importo DECIMAL(15, 2) NOT NULL,
+    Categoria VARCHAR(255) NOT NULL,
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
+    ParrocchiaID INT,
+    FOREIGN KEY (ParrocchiaID) REFERENCES Parrocchia(ID),
+    AttivitaSalesianaID INT,
+    FOREIGN KEY (AttivitaSalesianaID) REFERENCES AttivitaSalesiana(ID),
+    OratorioID INT,
+    FOREIGN KEY (OratorioID) REFERENCES Oratorio(ID)
+);
+
+CREATE TABLE Consumo (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    CasaSalesianaID INT,
+    Anno INT,
+    costo DECIMAL(10, 2),
+    TipoConsumo ENUM('luce', 'acqua', 'gas'),
+    Valore DECIMAL(10, 2),
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+);
+
+CREATE TABLE Documento (
+    ID INT PRIMARY KEY AUTO_INCREMENT,
+    Nome VARCHAR(255) NOT NULL,
+    Descrizione TEXT,
+    DataCreazione DATE,
+    Tipo VARCHAR(255),
+    url VARCHAR(255),
+    OperaSalesianaID INT,
+    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
+    CasaSalesianaID INT,
+    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
+    ParrocchiaID INT,
+    FOREIGN KEY (ParrocchiaID) REFERENCES Parrocchia(ID),
+    AttivitaSalesianaID INT,
+    FOREIGN KEY (AttivitaSalesianaID) REFERENCES AttivitaSalesiana(ID),
+    OratorioID INT,
+    FOREIGN KEY (OratorioID) REFERENCES Oratorio(ID),
+    CapitoloIspettorialeID INT,
+    FOREIGN KEY (CapitoloIspettorialeID) REFERENCES CapitoloIspettoriale(ID)
+);"""
     template = """Basandoti sullo schema del database seguente, scrivi una query MySQL che risponda alla domanda dell'utente:
     {schema}
     Domanda: {question}
@@ -172,9 +399,9 @@ if prompt := st.chat_input("Chiedi al Database:"):
     with st.chat_message("assistant"):
         question = st.session_state.messagesdb[-1]["content"]
         sql=text2sql(question)     
-        st.write(sql)   
+        
         result = execute_sql(sql)
-        st.write(result)
+        
         model, params = sqlresult2text(prompt,sql,result)
         stream = model.stream(params)
         response = st.write_stream(stream)
