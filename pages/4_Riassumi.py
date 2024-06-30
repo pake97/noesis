@@ -3,7 +3,7 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
-
+import hmac
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains.summarize import load_summarize_chain
 from langchain.document_loaders import PyPDFLoader
@@ -67,7 +67,7 @@ if st.button("Summarize"):
             
             llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro-latest")
             chain = load_summarize_chain(llm, chain_type="stuff")
-            text = "\n\n".join(str(p.page_content) for p in pages)
+            text = "\n\n".join(p.page_content for p in pages)
             summary = chain.run(input_documents=text, question="Scrivi un riassunto in italiano di {words} parole {refine}.".format(words=number, refine=refine))
             summary = llm.stream("Traduci in italiano: {summary}".format(summary=summary))
             st.write_stream(summary) 

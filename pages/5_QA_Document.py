@@ -9,6 +9,7 @@ from langchain.document_loaders import PyPDFLoader
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import os, tempfile
 from io import BytesIO
+import hmac
 from streamlit_searchbox import st_searchbox
 import boto3
 session = boto3.Session( aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])

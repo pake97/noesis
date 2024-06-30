@@ -6,6 +6,7 @@ from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 import tiktoken
 import logging
 import re
+import hmac
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.utilities import SQLDatabase
 from langchain.prompts import ChatPromptTemplate
