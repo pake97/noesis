@@ -19,6 +19,110 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 
 os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
+
+
+acronimi={"INE":"(Ispettoria) Italia Nord Est",
+"INE":"(Ispettoria) Italia Nord Est",
+"ILE":"(Ispettoria) Italia Lombardo Emiliana",
+"ILE":"(Ispettoria) Italia Lombardo Emiliana",
+"ISI":"(Ispettoria) Italia Sicula",
+"ISI":"(Ispettoria) Italia Sicula",
+"IME":"(Ispettoria) Italia Meridionale",
+"IME":"(Ispettoria) Italia Meridionale",
+"ICP":"(Ispettoria) Italia Circoscrizione Piemonte e Valle d'Aosta",
+"ICP":"(Ispettoria) Italia Circoscrizione Piemonte e Valle d'Aosta",
+"ICC":"(Ispettoria) Italia Centrale",
+"ICC":"(Ispettoria) Italia Centrale",
+"IVE":"Italia Veneto Est",
+"IVE":"Italia Veneto Est",
+"IVO":"Italia Veneto Ovest",
+"IVO":"Italia Veneto Ovest",
+"PEPS":"Progetto Educativo Pastorale Salesiano",
+"PEPS":"Progetto Educativo Pastorale Salesiano",
+"CEP":"Comunità Educativa Pastorale o Comunità Educativo Pastorale",
+"CEP":"Comunità Educativa Pastorale o Comunità Educativo Pastorale",
+"CEI":"Conferenza Episcopale Italiana",
+"CEI":"Conferenza Episcopale Italiana",
+"CIC":"Codex Iuris Canonici (= Codice di Diritto Canonico)",
+"CIC":"Codex Iuris Canonici (= Codice di Diritto Canonico)",
+"RM":"Rettor Maggiore",
+"RM":"Rettor Maggiore",
+"ACG":"Atti del Consiglio Generale",
+"ACG":"Atti del Consiglio Generale",
+"CI":"Capitolo Ispettoriale ",
+"CI":"Capitolo Ispettoriale ",
+"CGA":"Coordinatore/trice della Gestione Economica ed Amministrativa",
+"CGA":"Coordinatore/trice della Gestione Economica ed Amministrativa",
+"SDB":"Salesiani di don Bosco ",
+"SDB":"Salesiani di don Bosco ",
+"FMA":"Figlie di Maria Ausiliatrice ",
+"FMA":"Figlie di Maria Ausiliatrice ",
+"VDB":"Volontarie di don Bosco ",
+"VDB":"Volontarie di don Bosco ",
+"PGS":"Polisportive Giovanili Salesiane ",
+"PGS":"Polisportive Giovanili Salesiane ",
+"MGS":"Movimento Giovanile Salesiano",
+"MGS":"Movimento Giovanile Salesiano",
+"TGS":"Turismo Giovanile Salesiano",
+"TGS":"Turismo Giovanile Salesiano",
+"CFP":"Centro di Formazione Professionale",
+"CFP":"Centro di Formazione Professionale",
+"SFP":"Scuola della Formazione Professionale ",
+"SFP":"Scuola della Formazione Professionale ",
+"POI":"Piano Operativo Ispettoriale",
+"POI":"Piano Operativo Ispettoriale",
+"CNOS":"Centro Nazionale Opere Salesiane",
+"CNOS":"Centro Nazionale Opere Salesiane",
+"CNOS":"FAP - Centro Nazionale Opere Salesiane Formazione ed Aggiornamento Professionale",
+"CNOS":"FAP - Centro Nazionale Opere Salesiane Formazione ed Aggiornamento Professionale",
+"CNOS":"Scuola - Centro Nazionale Opere Salesiane settore Scuola",
+"CNOS":"Scuola - Centro Nazionale Opere Salesiane settore Scuola",
+"SCS":"Servizio Civile e Sociale",
+"SCS":"Servizio Civile e Sociale",
+"AGESC":"Associazione Genitori Scuole Cattoliche",
+"AGESC":"Associazione Genitori Scuole Cattoliche",
+"FP":"Formazione Professionale",
+"FP":"Formazione Professionale",
+"AV":"Animazione Vocazionale",
+"AV":"Animazione Vocazionale",
+"PIF":"Piano di Formazione Ispettoriale",
+"PIF":"Piano di Formazione Ispettoriale",
+"SCU":"Servizio Civile Universale",
+"SCU":"Servizio Civile Universale",
+"UPS":"Università Pontificia Salesiana",
+"UPS":"Università Pontificia Salesiana",
+"IUS":"Istituto Universitario Salesiano",
+"IUS":"Istituto Universitario Salesiano",
+"IUSVE":"Istituto Universitario Salesiano Venezia/Verona",
+"IUSVE":"Istituto Universitario Salesiano Venezia/Verona",
+"MSNA":"Minori Stranieri Non Accompagnati",
+"MSNA":"Minori Stranieri Non Accompagnati",
+"ADS":"Amici di San Domenico Savio",
+"ADS":"Amici di San Domenico Savio",
+"APG":"Animatori di Pastorale Giovanile",
+"APG":"Animatori di Pastorale Giovanile",
+"ISSM":"Istituto Salesiano San Marco",
+"ISSM":"Istituto Salesiano San Marco",
+"SDBM":"Salesiani Don Bosco Mestre ",
+"SDBM":"Salesiani Don Bosco Mestre ",
+"ISSZ":"Istituto Salesiano San Zeno",
+"ISSZ":"Istituto Salesiano San Zeno",
+"DAB":"Comunità Educativa per Minori e Centro Diurno di Albarè di Costermano",
+"DAB":"Comunità Educativa per Minori e Centro Diurno di Albarè di Costermano",
+"MOG":"Modello Organizzativo e Gestionale",
+"MOG":"Modello Organizzativo e Gestionale",
+"ODV":"Organismo di Vigilanza",
+"ODV":"Organismo di Vigilanza",
+"DPO":"Data Protection Officer ",
+"DPO":"Data Protection Officer ",
+"Cost":"Costituzioni della Congregazione Salesiana",
+"Cost":"Costituzioni della Congregazione Salesiana",
+"Reg":"Regolamenti della Congregazione Salesiana",
+"Reg":"Regolamenti della Congregazione Salesiana"
+}
+
+
+
 class Embedder:
     def __init__(self):
         self.embeddings =GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -149,26 +253,34 @@ for message in st.session_state.messagessalesiani:
 
 connector = Connector()
 if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
+    for k in list(acronimi.keys()):
+        if k in prompt:
+            prompt = prompt.replace(k,acronimi[k])
     st.session_state.messagessalesiani.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         with st.spinner('Calcolando...'):
             if(len(st.session_state.aimessagessalesiani)==0):
-                embs = Embedder()
+                response = chat_model.invoke("Data la seguende domanda, capisci se ti vengono chieste informazioni riguardo alle sedi Salesiane della INE (Italia Nord Est), oppure alle scuole, strutture o opere. Anche domande riguardanti i direttori. Rispondi solo SI o NO. domanda :" + prompt+"Risposta:")
+                if("NO" in response):
+                    embs = Embedder()
 
-                embedding = embs.get_embeddings(prompt)
+                    embedding = embs.get_embeddings(prompt)
 
-                context=""
-                res =connector.search("documents", embedding, top_k=2)
-                for re in res[0]:
-                    loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
-                    pages = loader.load_and_split()
-                    text = "\n\n".join(str(p.page_content) for p in pages)
-                    context+=text
-                    # Load the PDF document from the URL
-                    #loader.load_from_url('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
-                    # Extract text from the loaded PDF
-                
-                st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
+                    context=""
+                    res =connector.search("documents", embedding, top_k=2)
+                    for re in res[0]:
+                        loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
+                        pages = loader.load_and_split()
+                        text = "\n\n".join(str(p.page_content) for p in pages)
+                        context+=text
+                        # Load the PDF document from the URL
+                        #loader.load_from_url('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
+                        # Extract text from the loaded PDF
+                        
+                    st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
+                else : 
+                    context = pd.read_csv("INE.csv",sep="|").to_string()
+                    st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
             st.session_state.aimessagessalesiani.append(HumanMessage(content=prompt))
 
 
