@@ -16,7 +16,7 @@ from langchain.prompts import (
 from urllib.error import URLError
 from pymilvus import MilvusClient
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
+import pandas as pd
 
 os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 
