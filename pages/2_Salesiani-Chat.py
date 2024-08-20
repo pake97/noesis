@@ -278,9 +278,11 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
                         # Extract text from the loaded PDF
                         
                     st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
+                    st.session_state.source_salesiani = re['entity']['url'].split("/")[-1]    
                 else : 
                     context = pd.read_csv("INE.csv",sep="|").to_string()
                     st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
+                    st.session_state.source_salesiani = "Elenco delle sedi Salesiane della INE"
             st.session_state.aimessagessalesiani.append(HumanMessage(content=prompt))
 
 
@@ -290,6 +292,7 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
         response = st.write_stream(stream)
         st.session_state.aimessagessalesiani.append(AIMessage(content=response))
     st.session_state.messagessalesiani.append({"role": "assistant", "content": response})
+    st.text("Fonte: "+st.session_state.source_salesiani)
 
 
 
