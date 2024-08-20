@@ -285,7 +285,6 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
                 else : 
                     context = pd.read_csv("INE.csv",sep="|").to_string()
                     st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
-                    st.session_state.source_salesiani = "Elenco delle sedi Salesiane della INE"
             st.session_state.aimessagessalesiani.append(HumanMessage(content=prompt))
 
 
