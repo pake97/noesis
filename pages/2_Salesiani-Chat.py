@@ -250,7 +250,7 @@ if "aimessagessalesiani" not in st.session_state:
 for message in st.session_state.messagessalesiani:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-
+st.session_state.source_salesiani = ""
 connector = Connector()
 if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
     for k in list(acronimi.keys()):
@@ -259,6 +259,7 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
     st.session_state.messagessalesiani.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         with st.spinner('Calcolando...'):
+            st.session_state.source_salesiani = ""
             if(len(st.session_state.aimessagessalesiani)==0):
                 response = chat_model.invoke("Data la seguende domanda, capisci se ti vengono chieste informazioni riguardo alle sedi Salesiane della INE (Italia Nord Est), oppure alle scuole, strutture o opere. Anche domande riguardanti i direttori. Rispondi solo SI o NO. domanda :" + prompt+"Risposta:")
                 if("NO" in response):
@@ -270,6 +271,7 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
                     res =connector.search("documents", embedding, top_k=2)
                     for re in res[0]:
                         loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
+                        st.session_state.source_salesiani += re['entity']['url'].split("/")[-1]+","
                         pages = loader.load_and_split()
                         text = "\n\n".join(str(p.page_content) for p in pages)
                         context+=text
@@ -278,7 +280,7 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
                         # Extract text from the loaded PDF
                         
                     st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
-                    st.session_state.source_salesiani = re['entity']['url'].split("/")[-1]    
+                        
                 else : 
                     context = pd.read_csv("INE.csv",sep="|").to_string()
                     st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
