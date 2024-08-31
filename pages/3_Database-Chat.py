@@ -5,10 +5,10 @@ import os
 from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 import tiktoken
 import logging
+import requests
 import re
 import hmac
 from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_community.utilities.sql_database import SQLDatabase
 from langchain.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -16,13 +16,11 @@ from langchain.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_google_vertexai import ChatVertexAI
 from langchain_openai import ChatOpenAI
-from langchain.agents import create_sql_agent
 from langchain.agents.agent_types import AgentType
-from langchain_community.agent_toolkits import SQLDatabaseToolkit
 from io import StringIO
 import matplotlib.pyplot as plt
 import json
-
+import base64
 
 SQL_FAIL_MESSAGE = "SQL_ERROR"
 
@@ -31,13 +29,13 @@ IS_PLOT = """
     Domanda: {question}
     Risposta:"""
 HIST_DATA = """
-    Basandoti sui seguenti risultati, scrivili in formato csv per passarli alla libreria pandas in un Dataframe usando ';' come separatore se ci sono più colonne altrimenti vai a capo, in modo che io possa disegnare un histogramma per rispondere alla domanda seguente. Ritorna un dizionario con i seguenti campi : csv, nome_colonne. Includi i nomi delle colonne nel csv.
+    Basandoti sui seguenti risultati, scrivili in formato csv per passarli alla libreria pandas in un Dataframe usando ';' come separatore se ci sono più colonne altrimenti vai a capo, in modo che io possa disegnare un histogramma per rispondere alla domanda seguente. Ritorna un dizionario con i seguenti campi : csv, nome_colonne. Includi i nomi delle colonne nel csv. Il csv deve essere pronto per essere letto dalla libreria json di python. 
     Domanda: {question}
     Risultati: {results}
     Risposta:
 """
 LINE_DATA = """
-    Basandoti sui seguenti risultati, scrivili in formato csv per passarli alla libreria pandas in un Dataframe usando ';' come separatore se ci sono più colonne altrimenti vai a capo, in modo che io possa disegnare un line plot per rispondere alla domanda seguente. Ritorna un dizionario con i seguenti campi : csv, nome_colonne . Includi i nomi delle colonne nel csv.
+    Basandoti sui seguenti risultati, scrivili in formato csv per passarli alla libreria pandas in un Dataframe usando ';' come separatore se ci sono più colonne altrimenti vai a capo, in modo che io possa disegnare un line plot per rispondere alla domanda seguente. Ritorna un dizionario con i seguenti campi : csv, nome_colonne . Includi i nomi delle colonne nel csv. Il csv deve essere pronto per essere letto dalla libreria json di python.
     Domanda: {question}
     Risultati: {results}
     Risposta:
@@ -45,15 +43,16 @@ LINE_DATA = """
 
 def init():
     model = ChatGoogleGenerativeAI(model='gemini-1.5-pro-latest')
+    #model = ChatOpenAI(model='gpt-3.5-turbo')
    
-    db = SQLDatabase.from_uri(f""+st.secrets["mysql"], sample_rows_in_table_info=0)
-    return model,db
+    
+    return model, None
 
 def text2sql(question):
-    model,db = init()
+    model, db = init()
     # Using Closure desgin pattern to pass the db to the model
     def get_schema(_):
-        #return db.get_table_info()
+    
         return """CREATE TABLE CapitoloIspettoriale (
     ID INT PRIMARY KEY AUTO_INCREMENT,
     Nome VARCHAR(255) NOT NULL,
@@ -298,15 +297,28 @@ def execute_sql(query):
     print('EXECUTE SQL')
     print(query)
     print('----------------')
-    db = SQLDatabase.from_uri(st.secrets["mysql"], sample_rows_in_table_info=0)
+    #db = SQLDatabase.from_uri(st.secrets["mysql"], sample_rows_in_table_info=0)
     update_action_list = ['UPDATE','ADD','DELETE','DROP','MODIFY','INSERT']
     try:
         if any(item in query for item in update_action_list)==False:# no update actions
-            result = db.run(query)
-            if result:
-                return result
+            #result = db.run(query)
+            payload = {
+                "query": query # Replace with your actual SQL query
+            }
+            response = requests.post(st.secrets["run_query_api"],json=payload)
+    
+            # Check if the request was successful
+            if response.status_code == 200:
+                print("Request was successful")
+                data = response.json()
+                print("Response Data:", data)
+                return data["result"]
             else:
+                print(f"Failed with status code: {response.status_code}")
+                print("Response Data:", response.text)
                 return "No results found."
+            
+                
         else: return 'Finished' #update actions return no result but "Finished"
     except Exception as e:
         error_message = str(e)
@@ -315,9 +327,9 @@ def execute_sql(query):
 
 def sqlresult2text(question,sql_query,sql_result):
     # Using Closure desgin pattern to pass the db to the model
-    model,db = init()
-    def get_schema(_):
-        return db.get_table_info()
+    model, db = init()
+    def get_schema_info(_):
+        return get_schema()
     ## To natural language
     
     template = """
@@ -332,7 +344,7 @@ def sqlresult2text(question,sql_query,sql_result):
 
 
     text_response = (
-        RunnablePassthrough.assign(schema=get_schema)
+        RunnablePassthrough.assign(schema=get_schema_info)
         | prompt_response
         | model
     )
@@ -346,25 +358,56 @@ os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 def check_password():
     """Returns `True` if the user had the correct password."""
 
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
-        else:
-            st.session_state["password_correct"] = False
+    def login():    
+        
+        # Encode the password in Base64
+        encoded_password = base64.b64encode(password.encode()).decode()
+        
+        payload = {
+            "username": username,
+            "password": encoded_password
+        }
 
+        # Send the POST request
+        response = requests.post(st.secrets["login_api"], json=payload)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            print("Request was successful")
+            user = response.json()
+            print("Response Data:", user)
+        elif response.status_code == 404:
+            print("User not found")
+        else:
+            print(f"Failed with status code: {response.status_code}")
+            print("Response Data:", response.text)
+        
+    
+        
+        
+        st.session_state["user"] = user["user"]
+        
     # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
+    if st.session_state.get("user", None):
         return True
 
-    # Show input for password.
-    st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
+# Show input for password.
+    username = st.text_input(
+        "Username", type="default", key="username"
     )
     if "password_correct" in st.session_state:
         st.error("😕 Password incorrect")
+    # Show input for password.
+    password = st.text_input(
+        "Password", type="password", key="password"
+    )
+    if "password_correct" in st.session_state:
+        st.error("😕 Password incorrect")
+        
+        
+    st.button("Login", on_click=login)
     return False
+
 
 
 if not check_password():
@@ -398,13 +441,15 @@ if prompt := st.chat_input("Chiedi al Database:"):
 
     with st.chat_message("assistant"):
         question = st.session_state.messagesdb[-1]["content"]
+        print("Domanda",question)
         sql=text2sql(question)     
-        
+        print("SQL",sql)
         result = execute_sql(sql)
         
-        model, params = sqlresult2text(prompt,sql,result)
-        stream = model.stream(params)
-        response = st.write_stream(stream)
+        st.write(result)
+        #model, params = sqlresult2text(prompt,sql,result)
+        #stream = model.stream(params)
+        #response = st.write_stream(stream)
         
         model, db = init()
         prompt_response = ChatPromptTemplate.from_template(IS_PLOT)
@@ -425,7 +470,7 @@ if prompt := st.chat_input("Chiedi al Database:"):
             print(result)
             print(hist_csv.content)
             df = pd.read_csv(StringIO(json.loads(hist_csv.content)['csv']), sep=';')
-            columns=json.loads(hist_csv.content)['nome_colonne']
+            columns=json.loads(hist_csv.content)['nome_colonne'].split(';')
             st.dataframe(df)
             
             st.bar_chart(df, x=columns[0], y=columns[1])
@@ -437,14 +482,14 @@ if prompt := st.chat_input("Chiedi al Database:"):
             )
             line_csv = text_response.invoke({"question": question, "results": result})
             df = pd.read_csv(StringIO(json.loads(line_csv.content)['csv']), sep=';')
-            columns=json.loads(line_csv.content)['nome_colonne']
+            columns=json.loads(line_csv.content)['nome_colonne'].split(';')
             st.dataframe(df)
             st.line_chart(df)
         else:
             pass
         
-        st.session_state.aimessagesdb.append(AIMessage(content=response))
-    st.session_state.messagesdb.append({"role": "assistant", "content": response})
+        st.session_state.aimessagesdb.append(AIMessage(content=result))
+    st.session_state.messagesdb.append({"role": "assistant", "content": result})
 
 
 

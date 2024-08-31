@@ -4,11 +4,14 @@ import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 import hmac
+import requests
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
 from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
+import mysql.connector
+import base64
 st.logo('logo.png', icon_image='logo.png')
 st.set_page_config(page_title="Noesis")
 # Streamlit app
@@ -19,24 +22,54 @@ os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 def check_password():
     """Returns `True` if the user had the correct password."""
 
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
-        else:
-            st.session_state["password_correct"] = False
+    def login():    
+        
+        # Encode the password in Base64
+        encoded_password = base64.b64encode(password.encode()).decode()
+        
+        payload = {
+            "username": username,
+            "password": encoded_password
+        }
 
+        # Send the POST request
+        response = requests.post(st.secrets["login_api"], json=payload)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            print("Request was successful")
+            user = response.json()
+            print("Response Data:", user)
+        elif response.status_code == 404:
+            print("User not found")
+        else:
+            print(f"Failed with status code: {response.status_code}")
+            print("Response Data:", response.text)
+        
+    
+        
+        
+        st.session_state["user"] = user["user"]
+        
     # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
+    if st.session_state.get("user", None):
         return True
 
-    # Show input for password.
-    st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
+# Show input for password.
+    username = st.text_input(
+        "Username", type="default", key="username"
     )
     if "password_correct" in st.session_state:
         st.error("😕 Password incorrect")
+    # Show input for password.
+    password = st.text_input(
+        "Password", type="password", key="password"
+    )
+    if "password_correct" in st.session_state:
+        st.error("😕 Password incorrect")
+        
+        
+    st.button("Login", on_click=login)
     return False
 
 
@@ -64,10 +97,6 @@ if st.button("Summarize"):
         
         
         os.remove(tmp_file.name)
-
-        # Create embeddings for the pages and insert into Chroma database
-        embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
-        
 
         # Initialize the OpenAI module, load and run the summarize chain
         

@@ -9,9 +9,11 @@ import hmac
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from io import BytesIO
 import os
+import requests
 import boto3
 from botocore.exceptions import NoCredentialsError
-
+import mysql.connector
+import base64
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 
@@ -24,26 +26,58 @@ st.logo('logo.png', icon_image='logo.png')
 
 def check_password():
     """Returns `True` if the user had the correct password."""
+    
+        
+    def login():    
+        
+        # Encode the password in Base64
+        encoded_password = base64.b64encode(password.encode()).decode()
+        
+        payload = {
+            "username": username,
+            "password": encoded_password
+        }
 
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
+        # Send the POST request
+        response = requests.post(st.secrets["login_api"], json=payload)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            print("Request was successful")
+            user = response.json()
+            print("Response Data:", user)
+        elif response.status_code == 404:
+            print("User not found")
         else:
-            st.session_state["password_correct"] = False
-
+            print(f"Failed with status code: {response.status_code}")
+            print("Response Data:", response.text)
+        
+    
+        
+        
+        st.session_state["user"] = user["user"]
+        
     # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
+    if st.session_state.get("user", None):
         return True
 
-    # Show input for password.
-    st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
+# Show input for password.
+    username = st.text_input(
+        "Username", type="default", key="username"
     )
     if "password_correct" in st.session_state:
         st.error("😕 Password incorrect")
+    # Show input for password.
+    password = st.text_input(
+        "Password", type="password", key="password"
+    )
+    if "password_correct" in st.session_state:
+        st.error("😕 Password incorrect")
+        
+        
+    st.button("Login", on_click=login)
     return False
+
 
 
 if not check_password():
@@ -115,43 +149,59 @@ class document_loader():
             st.warning("Credentials not available", icon="🚫")
         except Exception as e:
             st.warning(e, icon="🚫")
-            
-    def upload_documents(self, documents):
+    
+    
+        
+    def upload_documents(self, documents, role):
         for document in documents:
             self.load_document_to_s3(document)
             docs,metadata, source = self.load_pdf(document)
             embeddings = self.embedder.get_embeddings(documents)
             data = []
-            print(len(embeddings))
+            
             for emb in embeddings:
-                data.append({"vector":emb,"url":document})
-            print(data)
+                data.append({"primary_key":1,"vector":emb,"url":document, role:role})
+            
             res = self.connector.insert_data("documents", data)
             
+            
+           
 
 
-def check_password():
-    """Returns `True` if the user had the correct password."""
+def getCount():
+        
+    response = requests.get(st.secrets["count_api"])
+    count = 1000
+    # Check if the request was successful
+    if response.status_code == 200:
+        print("Request was successful")
+        data = response.json()
+        print("Response Data:", data)
+        return data["documents"][0]["count"]
+    else:
+        print(f"Failed with status code: {response.status_code}")
+        print("Response Data:", response.text)
+        return 1000
+        
+def insertMap(doc_id,url,zilliz_id,level):
+    
+    payload = {
+        "doc_id":doc_id, 
+        "url":url, 
+        "zilliz_id":zilliz_id, 
+        "level":level
+    }
 
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
-        else:
-            st.session_state["password_correct"] = False
+    # Send the POST request
+    response = requests.post(st.secrets["put_document_api"], json=payload)
 
-    # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
-        return True
-
-    # Show input for password.
-    st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
-    )
-    if "password_correct" in st.session_state:
-        st.error("😕 Password incorrect")
-    return False
+    # Check if the request was successful
+    if response.status_code == 201:
+        print("User created successfully")
+    else:
+        print(f"Failed with status code: {response.status_code}")
+        print("Response Data:", response.text)
+        st.error("Errore nella creazione dell'utente")
 
 
 if not check_password():
@@ -173,6 +223,7 @@ def upload():
     if uploaded_file is None:
         st.session_state["upload_state"] = "Upload a file first!"
     else:
+        counter = getCount()[0][0]
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         temp_file = "./"+uploaded_file.name
         with open(temp_file, "wb") as file:
@@ -188,13 +239,17 @@ def upload():
         loaded = loader.load_document_to_s3(uploaded_file)
         embeddings = loader.embedder.get_embeddings(texts)
         data = []
-        print(len(embeddings))
+        
         for emb in embeddings:
-            data.append({"vector":emb,"url":loaded})
-        print(data)
+            data.append({"primary_key":counter+1,"vector":emb,"url":loaded, "role":st.session_state["role"]})
         res = loader.connector.insert_data("documents", data)
+        
+        insertMap(counter+1,loaded,counter+1,st.session_state["role"])
+        
+        
         if(loaded):
             st.warning("Saved " + loaded + " successfully!", icon="✅")
             st.session_state["upload_state"] = "Saved " + loaded + " successfully!"
-st.button("Upload file", on_click=upload)
+role=st.selectbox("Ruolo",['ispettore','residente','consigliere','direttore'],key="role")
+st.button("Upload file", on_click=upload, disabled=role==None)
 

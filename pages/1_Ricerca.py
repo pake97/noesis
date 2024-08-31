@@ -4,10 +4,12 @@ import altair as alt
 from urllib.error import URLError
 import hmac
 import os
+import requests
 import boto3
 from pymilvus import MilvusClient
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-
+import mysql.connector
+import base64
 os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 class Embedder:
     def __init__(self):
@@ -44,7 +46,17 @@ class Connector:
         return self.client.insert(collection_name=collection_name, data=data)
     
     def search(self, collection_name, vector, top_k):
-        return self.client.search(collection_name=collection_name, data=vector, limit=top_k, search_params={"metric_type": "COSINE"}, output_fields=['url'])
+        doc_filter = "role in ["
+        if st.session_state["user"]["role"] == "ispettore":
+            doc_filter += "'ispettore', 'residente', 'consigliere', 'direttore']"
+        elif st.session_state["user"]["role"] == "residente":
+            doc_filter += "'residente', 'consigliere', 'direttore']"
+        elif st.session_state["user"]["role"] == "consigliere":
+            doc_filter += "'consigliere', 'direttore']"
+        else:
+            doc_filter += "'direttore']"
+        print("FILTRO",doc_filter)   
+        return self.client.search(collection_name=collection_name, data=vector[:10], limit=5, output_fields=['url'], filter=doc_filter)
 def download_file(url):
     st.session_state["clicked"] = True
     s3_client = boto3.client('s3', aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])
@@ -53,25 +65,56 @@ def download_file(url):
 def check_password():
     """Returns `True` if the user had the correct password."""
 
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
-        else:
-            st.session_state["password_correct"] = False
+    def login():    
+        
+        # Encode the password in Base64
+        encoded_password = base64.b64encode(password.encode()).decode()
+        
+        payload = {
+            "username": username,
+            "password": encoded_password
+        }
 
+        # Send the POST request
+        response = requests.post(st.secrets["login_api"], json=payload)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            print("Request was successful")
+            user = response.json()
+            print("Response Data:", user)
+        elif response.status_code == 404:
+            print("User not found")
+        else:
+            print(f"Failed with status code: {response.status_code}")
+            print("Response Data:", response.text)
+        
+    
+        
+        
+        st.session_state["user"] = user["user"]
+        
     # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
+    if st.session_state.get("user", None):
         return True
 
-    # Show input for password.
-    st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
+# Show input for password.
+    username = st.text_input(
+        "Username", type="default", key="username"
     )
     if "password_correct" in st.session_state:
         st.error("😕 Password incorrect")
+    # Show input for password.
+    password = st.text_input(
+        "Password", type="password", key="password"
+    )
+    if "password_correct" in st.session_state:
+        st.error("😕 Password incorrect")
+        
+        
+    st.button("Login", on_click=login)
     return False
+
 
 
 if not check_password():

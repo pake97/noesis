@@ -1,11 +1,13 @@
 import streamlit as st
 import hmac
 import os
+import requests
 from langchain_openai import ChatOpenAI
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 from langchain.document_loaders import PyPDFLoader
 import boto3
+import mysql.connector
 from langchain_openai import ChatOpenAI
 from langchain.prompts import (
     PromptTemplate,
@@ -17,7 +19,7 @@ from urllib.error import URLError
 from pymilvus import MilvusClient
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import pandas as pd
-
+import base64
 os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 
 
@@ -156,7 +158,17 @@ class Connector:
         return self.client.insert(collection_name=collection_name, data=data)
     
     def search(self, collection_name, vector, top_k):
-        return self.client.search(collection_name=collection_name, data=vector, limit=top_k, search_params={"metric_type": "COSINE"}, output_fields=['url'])
+        doc_filter = "role in ["
+        if st.session_state["user"]["role"] == "ispettore":
+            doc_filter += "'ispettore', 'residente', 'consigliere', 'direttore']"
+        elif st.session_state["user"]["role"] == "residente":
+            doc_filter += "'residente', 'consigliere', 'direttore']"
+        elif st.session_state["user"]["role"] == "consigliere":
+            doc_filter += "'consigliere', 'direttore']"
+        else:
+            doc_filter += "'direttore']"
+    
+        return self.client.search(collection_name=collection_name, data=vector[:10], limit=top_k, search_params={"metric_type": "COSINE"}, output_fields=['url'], filter=doc_filter)
 def download_file(url):
     st.session_state["clicked"] = True
     s3_client = boto3.client('s3', aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])
@@ -205,25 +217,56 @@ os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
 def check_password():
     """Returns `True` if the user had the correct password."""
 
-    def password_entered():
-        """Checks whether a password entered by the user is correct."""
-        if hmac.compare_digest(st.session_state["password"], st.secrets["password"]):
-            st.session_state["password_correct"] = True
-            del st.session_state["password"]  # Don't store the password.
-        else:
-            st.session_state["password_correct"] = False
+    def login():    
+        
+        # Encode the password in Base64
+        encoded_password = base64.b64encode(password.encode()).decode()
+        
+        payload = {
+            "username": username,
+            "password": encoded_password
+        }
 
+        # Send the POST request
+        response = requests.post(st.secrets["login_api"], json=payload)
+
+        # Check if the request was successful
+        if response.status_code == 200:
+            print("Request was successful")
+            user = response.json()
+            print("Response Data:", user)
+        elif response.status_code == 404:
+            print("User not found")
+        else:
+            print(f"Failed with status code: {response.status_code}")
+            print("Response Data:", response.text)
+        
+    
+        
+        
+        st.session_state["user"] = user["user"]
+        
     # Return True if the password is validated.
-    if st.session_state.get("password_correct", False):
+    if st.session_state.get("user", None):
         return True
 
-    # Show input for password.
-    st.text_input(
-        "Password", type="password", on_change=password_entered, key="password"
+# Show input for password.
+    username = st.text_input(
+        "Username", type="default", key="username"
     )
     if "password_correct" in st.session_state:
         st.error("😕 Password incorrect")
+    # Show input for password.
+    password = st.text_input(
+        "Password", type="password", key="password"
+    )
+    if "password_correct" in st.session_state:
+        st.error("😕 Password incorrect")
+        
+        
+    st.button("Login", on_click=login)
     return False
+
 
 
 if not check_password():
@@ -241,16 +284,17 @@ messages = [
     
 ]
 
-
+fonte = ""
 if "messagessalesiani" not in st.session_state:
     st.session_state.messagessalesiani = []
+    
 if "aimessagessalesiani" not in st.session_state:
     st.session_state.aimessagessalesiani = []
 
 for message in st.session_state.messagessalesiani:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-st.session_state.source_salesiani = ""
+
 connector = Connector()
 if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
     for k in list(acronimi.keys()):
@@ -261,29 +305,33 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
         with st.spinner('Calcolando...'):
             
             if(len(st.session_state.aimessagessalesiani)==0):
-                response = chat_model.invoke("Data la seguende domanda, capisci se ti vengono chieste informazioni riguardo alle sedi Salesiane della INE (Italia Nord Est), oppure alle scuole, strutture o opere. Anche domande riguardanti i direttori. Rispondi solo SI o NO. domanda :" + prompt+"Risposta:")
-                if("NO" in response):
+                response = chat_model.invoke("Data la seguende domanda, capisci se ti vengono chieste informazioni riguardo alle sedi Salesiane della INE (Italia Nord Est), oppure alle scuole, strutture o opere. Anche domande riguardanti i direttori. Rispondi solo TRUE o FALSE. domanda :" + prompt+"Risposta:")
+                print("RESPONSE",response.content)
+                if("TRUE" not in response.content):
                     embs = Embedder()
 
                     embedding = embs.get_embeddings(prompt)
 
                     context=""
                     res =connector.search("documents", embedding, top_k=2)
+                    print("ZILLIZ",res)
+                    print("FONTE",res[0][0]['entity']['url'].split("/")[-1])
                     for re in res[0]:
                         loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
-                        print(re['entity']['url'].split("/")[-1])
                         pages = loader.load_and_split()
                         text = "\n\n".join(str(p.page_content) for p in pages)
                         context+=text
                         # Load the PDF document from the URL
                         #loader.load_from_url('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
                         # Extract text from the loaded PDF
-                    for re in res[0]:
-                        st.session_state.source_salesiani=st.session_state.source_salesiani+ re['entity']['url'].split("/")[-1]+","
+                    
+                    fonte=fonte+ res[0][0]['entity']['url'].split("/")[-1]
                     st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
                         
                 else : 
+                    
                     context = pd.read_csv("INE.csv",sep="|").to_string()
+                    fonte="INE.csv"
                     st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
             st.session_state.aimessagessalesiani.append(HumanMessage(content=prompt))
 
@@ -294,7 +342,7 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
         response = st.write_stream(stream)
         st.session_state.aimessagessalesiani.append(AIMessage(content=response))
     st.session_state.messagessalesiani.append({"role": "assistant", "content": response})
-    st.text("Fonte: "+st.session_state.source_salesiani)
+    st.text("Fonte: "+fonte)
 
 
 
