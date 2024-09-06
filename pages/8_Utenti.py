@@ -125,7 +125,7 @@ def getUser():
         return pd.DataFrame([])
 
 
-if "data" not in st.session_state:
+if "users_data" not in st.session_state:
     df = getUser()
     df["select"] = False
     st.session_state["users_data"] = df
