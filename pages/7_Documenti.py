@@ -7,7 +7,7 @@ from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 from langchain.document_loaders import PyPDFLoader
 import boto3
 import requests
-import mysql.connector
+
 from langchain_openai import ChatOpenAI
 from langchain.prompts import (
     PromptTemplate,

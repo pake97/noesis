@@ -8,7 +8,7 @@ from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 import tiktoken
 import logging
 
-import mysql.connector
+
 import base64
 
 

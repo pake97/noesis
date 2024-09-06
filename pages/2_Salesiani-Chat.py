@@ -7,7 +7,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema.messages import HumanMessage, SystemMessage, AIMessage
 from langchain.document_loaders import PyPDFLoader
 import boto3
-import mysql.connector
+
 from langchain_openai import ChatOpenAI
 from langchain.prompts import (
     PromptTemplate,

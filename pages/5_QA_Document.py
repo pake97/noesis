@@ -11,7 +11,7 @@ from langchain_google_genai import GoogleGenerativeAI
 import os, tempfile
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from io import BytesIO
-import mysql.connector
+
 import base64
 from streamlit_searchbox import st_searchbox
 import boto3

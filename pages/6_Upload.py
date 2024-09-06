@@ -12,7 +12,7 @@ import os
 import requests
 import boto3
 from botocore.exceptions import NoCredentialsError
-import mysql.connector
+
 import base64
 from langchain.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter

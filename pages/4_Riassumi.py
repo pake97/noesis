@@ -10,7 +10,7 @@ from langchain_openai import OpenAIEmbeddings
 from langchain.chains.summarize import load_summarize_chain
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import mysql.connector
+
 import base64
 st.logo('logo.png', icon_image='logo.png')
 st.set_page_config(page_title="Noesis")

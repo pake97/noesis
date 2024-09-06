@@ -8,7 +8,7 @@ import requests
 import boto3
 from pymilvus import MilvusClient
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-import mysql.connector
+
 import base64
 os.environ["GOOGLE_API_KEY"] = st.secrets["google_key"]
 class Embedder:
