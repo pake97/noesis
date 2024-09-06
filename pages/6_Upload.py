@@ -29,7 +29,7 @@ def check_password():
     
         
     def login():    
-        
+        user = {"user":""}
         # Encode the password in Base64
         encoded_password = base64.b64encode(password.encode()).decode()
         
