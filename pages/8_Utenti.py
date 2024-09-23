@@ -38,7 +38,7 @@ def check_password():
             "password": encoded_password
         }
 
-        # Send the POST request
+
         response = requests.post(st.secrets["login_api"], json=payload)
 
         # Check if the request was successful
