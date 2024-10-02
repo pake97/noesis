@@ -223,7 +223,7 @@ def upload():
     if uploaded_file is None:
         st.session_state["upload_state"] = "Upload a file first!"
     else:
-        counter = getCount()[0][0]
+        counter = getCount()
         text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
         temp_file = "./"+uploaded_file.name
         with open(temp_file, "wb") as file:
