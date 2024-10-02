@@ -215,7 +215,7 @@ if(st.session_state.user["role"]=='ispettore'):
         new_username=form.text_input("Nuovo Username",key="new_username")
         new_password=form.text_input("Nuova Password",key="new_password")
         role=form.selectbox("Ruolo",['ispettore','residente','consigliere','direttore'],key="role")
-        form.form_submit_button(label="Salva", help=None, on_click=save_user, args=(st.session_state["users_data"].shape[0],new_username, new_password, role), kwargs=None, type="secondary", disabled=False, use_container_width=False)
+        form.form_submit_button(label="Salva", help=None, on_click=save_user, args=(st.session_state["users_data"].shape[0]+1,new_username, new_password, role), kwargs=None, type="secondary", disabled=False, use_container_width=False)
             
         
         
