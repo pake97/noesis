@@ -53,11 +53,7 @@ def text2sql(question):
     # Using Closure desgin pattern to pass the db to the model
     def get_schema(_):
     
-        return """CREATE TABLE CapitoloIspettoriale (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Data DATE NOT NULL
-);
+        return """
 
 CREATE TABLE CasaSalesiana (
     ID INT PRIMARY KEY AUTO_INCREMENT,
@@ -69,16 +65,6 @@ CREATE TABLE CasaSalesiana (
     Luogo ENUM('Triveneto', 'Moldavia', 'Romania')
 );
 
-CREATE TABLE MemroCapitoloIspettoriale (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    CapitoloIspettorialeID INT,
-    SalesianoID INT,
-    DipendenteID INT,
-    FOREIGN KEY (CapitoloIspettorialeID) REFERENCES CapitoloIspettoriale(ID),
-    FOREIGN KEY (SalesianoID) REFERENCES Salesiano(ID),
-    FOREIGN KEY (DipendenteID) REFERENCES Dipendente(ID),
-    CHECK ((SalesianoID IS NOT NULL AND DipendenteID IS NULL) OR (SalesianoID IS NULL AND DipendenteID IS NOT NULL))
-);
 
 CREATE TABLE Salesiano (
     ID INT PRIMARY KEY AUTO_INCREMENT,
@@ -260,27 +246,8 @@ CREATE TABLE Consumo (
     FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
 );
 
-CREATE TABLE Documento (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Descrizione TEXT,
-    DataCreazione DATE,
-    Tipo VARCHAR(255),
-    url VARCHAR(255),
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
-    ParrocchiaID INT,
-    FOREIGN KEY (ParrocchiaID) REFERENCES Parrocchia(ID),
-    AttivitaSalesianaID INT,
-    FOREIGN KEY (AttivitaSalesianaID) REFERENCES AttivitaSalesiana(ID),
-    OratorioID INT,
-    FOREIGN KEY (OratorioID) REFERENCES Oratorio(ID),
-    CapitoloIspettorialeID INT,
-    FOREIGN KEY (CapitoloIspettorialeID) REFERENCES CapitoloIspettoriale(ID)
-);"""
-    template = """Basandoti sullo schema del database seguente, scrivi una query MySQL che risponda alla domanda dell'utente:
+"""
+    template = """Basandoti sullo schema del database seguente, scrivi una query MySQL che risponda alla domanda dell'utente. Ricorda che 'Triveneto', 'Moldavia' e 'Romania' sono i valori possibili per il campo 'Luogo' nelle tabelle 'CasaSalesiana', 'OperaSalesiana', 'ScuolaSalesiana', 'AttivitaSalesiana', 'Oratorio' e 'Parrocchia'. Mentre La Ispettoria INE (Italia Nord Est) comprende tutti i luoghi.
     {schema}
     Domanda: {question}
     SQL Query:"""
@@ -294,6 +261,7 @@ CREATE TABLE Documento (
     return sql_response.invoke({"question": question})  
 
 def execute_sql(query):
+    query = query.replace("```sql", "").replace("```", "")
     print('EXECUTE SQL')
     print(query)
     print('----------------')
