@@ -82,172 +82,64 @@ CREATE TABLE Salesiano (
     DataProfessione DATE,
     FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
 );
-CREATE TABLE OperaSalesiana (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Descrizione TEXT,
-    Città VARCHAR(255),
-    Provincia VARCHAR(255),
-    Regione VARCHAR(255),
-    Luogo ENUM('Triveneto', 'Moldavia', 'Romania'),
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+
+CREATE TABLE anagrafica_persona_fisica (
+  id VARCHAR(255) PRIMARY KEY,
+  cognome VARCHAR(255),
+  nome VARCHAR(255),
+  indirizzoDiResidenza VARCHAR(255),
+  capResidenza VARCHAR(255),
+  localitaResidenza VARCHAR(255),
+  provinciaResidenza VARCHAR(255),
+  email VARCHAR(255),
+  sesso VARCHAR(255), # (F o M)
+  dataDiNascita DATE,
+  codiceFiscale VARCHAR(255) UNIQUE,
+  comuneDiNascita VARCHAR(255),
+  provinciaDiNascita VARCHAR(255)
 );
 
 
-CREATE TABLE ScuolaSalesiana (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Indirizzo VARCHAR(255),
-    Città VARCHAR(255),
-    Provincia VARCHAR(255),
-    Regione VARCHAR(255),
-    Tipo ENUM('Primaria', 'Secondaria Primo Grado', 'Secondaria Secondo Grado', 'Università'),
-    Luogo ENUM('Triveneto', 'Moldavia', 'Romania'),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID)
-);
-
-CREATE TABLE AttivitaSalesiana (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Descrizione TEXT,
-    Città VARCHAR(255),
-    Provincia VARCHAR(255),
-    Regione VARCHAR(255),
-    Luogo ENUM('Triveneto', 'Moldavia', 'Romania'),
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+CREATE TABLE mansione (
+  id VARCHAR(255) PRIMARY KEY,
+  denominazione VARCHAR(255)
 );
 
 
-
-CREATE TABLE Oratorio (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Descrizione TEXT,
-    Città VARCHAR(255),
-    Provincia VARCHAR(255),
-    Regione VARCHAR(255),
-    Luogo ENUM('Triveneto', 'Moldavia', 'Romania'),
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
+CREATE TABLE azienda (
+  id VARCHAR(255) PRIMARY KEY,
+  denominazione VARCHAR(255),
+  indirizzo VARCHAR(255),
+  cap VARCHAR(255),
+  comune VARCHAR(255),
+  provincia VARCHAR(255)
 );
 
 
-CREATE TABLE Parrocchia (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Indirizzo VARCHAR(255),
-    Città VARCHAR(255),
-    Provincia VARCHAR(255),
-    Regione ENUM('Triveneto', 'Moldavia', 'Romania'),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID)
+CREATE TABLE filiale (
+  id VARCHAR(255) PRIMARY KEY,
+  denominazione VARCHAR(255),
+  indirizzo VARCHAR(255),
+  cap VARCHAR(255),
+  comune VARCHAR(255),
+  provincia VARCHAR(255),
+  azienda VARCHAR(255),
+  FOREIGN KEY (azienda) REFERENCES azienda(id)
 );
 
-CREATE TABLE Auto (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Modello VARCHAR(255),
-    AnnoAcquisto INT,
-    AnnoCreazione INT,
-    Targa VARCHAR(50),
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
-    ParrocchiaID INT,
-    FOREIGN KEY (ParrocchiaID) REFERENCES Parrocchia(ID),
-    AttivitaSalesianaID INT,
-    FOREIGN KEY (AttivitaSalesianaID) REFERENCES AttivitaSalesiana(ID),
-    OratorioID INT,
-    FOREIGN KEY (OratorioID) REFERENCES Oratorio(ID)
+CREATE TABLE ruolo (
+  id VARCHAR(255) PRIMARY KEY,
+  mansione VARCHAR(255),
+  anagraficaPersonaFisica VARCHAR(255),
+  filiale VARCHAR(255),
+  dataInizio DATE,
+  dataTermine DATE,
+  FOREIGN KEY (mansione) REFERENCES mansione(id),
+  FOREIGN KEY (anagraficaPersonaFisica) REFERENCES anagrafica_persona_fisica(id),
+  FOREIGN KEY (filiale) REFERENCES filiale(id)
 );
-
-
-CREATE TABLE Studente (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Cognome VARCHAR(255) NOT NULL,
-    DataDiNascita DATE,
-    CodiceFiscale VARCHAR(255),
-    livello ENUM('Primaria', 'Secondaria Primo Grado', 'Secondaria Secondo Grado', 'Università'),
-    anno INT,
-    ScuolaSalesianaID INT,
-    CasaSalesianaID INT,
-    AnnoIscrizione INT,
-    Retta DECIMAL(10, 2),
-    FOREIGN KEY (ScuolaSalesianaID) REFERENCES ScuolaSalesiana(ID),
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
-);
-
-CREATE TABLE Dipendente (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Nome VARCHAR(255) NOT NULL,
-    Cognome VARCHAR(255) NOT NULL,
-    Sesso VARCHAR(10),
-    CodiceFiscale VARCHAR(255),
-    DataDiNascita DATE,
-    CittaNascita VARCHAR(255),
-    RegioneNascita VARCHAR(255),
-    DataAssunzione DATE,
-    DataCessazione DATE,
-    Ruolo ENUM('Direttore', 'Insegnante', 'Amministrativo', 'Ausiliario', 'Economo', 'Delegato', 'Tirocinante', 'Diacono', 'Sacerdote', 'Cooperatore', 'Laico', 'Volontario', 'Altro'),
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
-    ScuolaSalesianaID INT,
-    FOREIGN KEY (ScuolaSalesianaID) REFERENCES ScuolaSalesiana(ID),
-    ParrocchiaID INT,
-    FOREIGN KEY (ParrocchiaID) REFERENCES Parrocchia(ID),
-    AttivitaSalesianaID INT,
-    FOREIGN KEY (AttivitaSalesianaID) REFERENCES AttivitaSalesiana(ID),
-    OratorioID INT,
-    FOREIGN KEY (OratorioID) REFERENCES Oratorio(ID)
-);
-
-CREATE TABLE Bilancio (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    Anno INT,
-    Descrizione VARCHAR(255) NOT NULL,
-    TipoVoce ENUM('Entrata', 'Spesa', 'Attivo', 'Passivo') NOT NULL,
-    Importo DECIMAL(15, 2) NOT NULL,
-    Categoria VARCHAR(255) NOT NULL,
-    OperaSalesianaID INT,
-    FOREIGN KEY (OperaSalesianaID) REFERENCES OperaSalesiana(ID),
-    CasaSalesianaID INT,
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID),
-    ParrocchiaID INT,
-    FOREIGN KEY (ParrocchiaID) REFERENCES Parrocchia(ID),
-    AttivitaSalesianaID INT,
-    FOREIGN KEY (AttivitaSalesianaID) REFERENCES AttivitaSalesiana(ID),
-    OratorioID INT,
-    FOREIGN KEY (OratorioID) REFERENCES Oratorio(ID)
-);
-
-CREATE TABLE Consumo (
-    ID INT PRIMARY KEY AUTO_INCREMENT,
-    CasaSalesianaID INT,
-    Anno INT,
-    costo DECIMAL(10, 2),
-    TipoConsumo ENUM('luce', 'acqua', 'gas'),
-    Valore DECIMAL(10, 2),
-    FOREIGN KEY (CasaSalesianaID) REFERENCES CasaSalesiana(ID)
-);
-
 """
-    template = """Basandoti sullo schema del database seguente, scrivi una query MySQL che risponda alla domanda dell'utente. Ricorda che 'Triveneto', 'Moldavia' e 'Romania' sono i valori possibili per il campo 'Luogo' nelle tabelle 'CasaSalesiana', 'OperaSalesiana', 'ScuolaSalesiana', 'AttivitaSalesiana', 'Oratorio' e 'Parrocchia'. Mentre La Ispettoria INE (Italia Nord Est) comprende tutti i luoghi.
+    template = """Basandoti sullo schema del database seguente, scrivi una query MySQL che risponda alla domanda dell'utente. Ricorda che 'Triveneto', 'Moldavia' e 'Romania' sono i valori possibili per il campo 'Luogo' nella tabella 'CasaSalesiana'. Mentre La Ispettoria INE (Italia Nord Est) comprende tutti i luoghi.
     {schema}
     Domanda: {question}
     SQL Query:"""
