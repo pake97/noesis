@@ -177,7 +177,7 @@ def getCount():
         print("Request was successful")
         data = response.json()
         print("Response Data:", data)
-        return data["documents"][0]["count"]
+        return data["documents"][0]["count"]+1
     else:
         print(f"Failed with status code: {response.status_code}")
         print("Response Data:", response.text)
