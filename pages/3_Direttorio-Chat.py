@@ -305,34 +305,29 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
         with st.spinner('Calcolando...'):
             
             if(len(st.session_state.aimessagessalesiani)==0):
-                response = chat_model.invoke("Data la seguende domanda, capisci se ti vengono chieste informazioni riguardo alle sedi Salesiane della INE (Italia Nord Est), oppure alle scuole, strutture o opere. Anche domande riguardanti i direttori. Rispondi solo TRUE o FALSE. domanda :" + prompt+"Risposta:")
-                print("RESPONSE",response.content)
-                if("TRUE" not in response.content):
-                    embs = Embedder()
+                
+                embs = Embedder()
 
-                    embedding = embs.get_embeddings(prompt)
+                embedding = embs.get_embeddings(prompt)
 
-                    context=""
-                    res =connector.search("direttorio", embedding, top_k=2)
-                    print("ZILLIZ",res)
-                    print("FONTE",res[0][0]['entity']['url'].split("/")[-1])
-                    for re in res[0]:
-                        loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
-                        pages = loader.load_and_split()
-                        text = "\n\n".join(str(p.page_content) for p in pages)
-                        context+=text
-                        # Load the PDF document from the URL
-                        #loader.load_from_url('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
-                        # Extract text from the loaded PDF
-                    
-                    fonte=fonte+ res[0][0]['entity']['url'].split("/")[-1]
-                    st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
+                context=""
+                res =connector.search("direttorio", embedding, top_k=2)
+                print("ZILLIZ",res)
+                print('https://preprocessing-noesis.s3.eu-north-1.amazonaws.com/'+res[0][0]['entity']['url'].replace(' ','+'))
+                
+                for re in res[0]:
+                    loader = PyPDFLoader('https://preprocessing-noesis.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].replace(' ','+'))
+                    pages = loader.load_and_split()
+                    text = "\n\n".join(str(p.page_content) for p in pages)
+                    context+=text
+                    # Load the PDF document from the URL
+                    #loader.load_from_url('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
+                    # Extract text from the loaded PDF
+                
+                fonte=fonte+ res[0][0]['entity']['url'].split("/")[-1]
+                st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
                         
-                else : 
-                    
-                    context = pd.read_csv("INE.csv",sep="|").to_string()
-                    fonte="INE.csv"
-                    st.session_state.aimessagessalesiani.append(SystemMessage(content=context))
+               
             st.session_state.aimessagessalesiani.append(HumanMessage(content=prompt))
 
 

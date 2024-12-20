@@ -172,7 +172,7 @@ class Connector:
 def download_file(url):
     st.session_state["clicked"] = True
     s3_client = boto3.client('s3', aws_access_key_id=st.secrets['aws_access_key_id'], aws_secret_access_key=st.secrets['aws_secret_access_key'])
-    downloaded = s3_client.download_file('salesian2024', url[0], '/tmp/temp_file.pdf')
+    downloaded = s3_client.download_file('salesian2024', url[0].replace(' ','+'), '/tmp/temp_file.pdf')
     
 
 
@@ -317,7 +317,7 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
                     print("ZILLIZ",res)
                     print("FONTE",res[0][0]['entity']['url'].split("/")[-1])
                     for re in res[0]:
-                        loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
+                        loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1].replace(' ','+'))
                         pages = loader.load_and_split()
                         text = "\n\n".join(str(p.page_content) for p in pages)
                         context+=text

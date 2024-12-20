@@ -172,9 +172,14 @@ with st.form('myform', clear_on_submit=True):
         #try:
         with st.spinner('Calcolando...'):
             if(uploaded_file is None):
-                uploaded_file = s3_client.download_file('salesian2024', download_file, '/tmp/temp_file.pdf')
-                response = generate_response('/tmp/temp_file.pdf', query_text, False)
-                result.append(response)
+                if("visite-ispettoriali" in download_file):
+                    uploaded_file = s3_client.download_file('preprocessing-noesis', download_file, '/tmp/temp_file.pdf')
+                    response = generate_response('/tmp/temp_file.pdf', query_text, False)
+                    result.append(response)    
+                else:
+                    uploaded_file = s3_client.download_file('salesian2024', download_file, '/tmp/temp_file.pdf')
+                    response = generate_response('/tmp/temp_file.pdf', query_text, False)
+                    result.append(response)
             else:
                 response = generate_response(uploaded_file, query_text, True)
                 result.append(response)
