@@ -317,7 +317,8 @@ if prompt := st.chat_input("Invia messagio al Chatbot Salesiani:"):
                     print("ZILLIZ",res)
                     print("FONTE",res[0][0]['entity']['url'].split("/")[-1])
                     for re in res[0]:
-                        loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1].replace(' ','+'))
+                        print("URL",re['entity']['url'])
+                        loader = PyPDFLoader('https://salesian2024.s3.eu-north-1.amazonaws.com/'+re['entity']['url'].split("/")[-1])
                         pages = loader.load_and_split()
                         text = "\n\n".join(str(p.page_content) for p in pages)
                         context+=text
